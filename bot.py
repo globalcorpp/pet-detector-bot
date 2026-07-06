@@ -1,5 +1,4 @@
 import os
-from turtle import update
 from dotenv import load_dotenv
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler , filters
