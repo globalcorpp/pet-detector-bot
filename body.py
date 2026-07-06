@@ -1,7 +1,12 @@
+import os
+
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-TOKEN = ""
+load_dotenv()
+
+TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hallo, Guten Tag 👋 ." + "")
