@@ -9,6 +9,7 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print("Start def called")
     await update.message.reply_text("Willkommen auf mein App !")
     keyboard = [
         [KeyboardButton("Name"), KeyboardButton("Alter")]
