@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Detector</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🐶🐱 Dog & Cat Detector</h1>
+
+        <div class="buttons">
+            <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+            
+            <button class="btn photo" onclick="triggerImageUpload()">
+                📁 Upload
+            </button>
+
+            <button class="btn video" id="btn-camera-manual" onclick="startCameraManual()">
+                📷 Manual
+            </button>
+
+            <button class="btn live-btn" id="btn-camera-live" onclick="startLiveVideo()">
+                Live
+            </button>
+
+            <button class="btn-capture" id="btn-capture" onclick="takeSnapshot()" style="display: none;">
+                📸 Capture
+            </button>
+
+            <button class="btn-stop" id="btn-stop" onclick="stopWebcam()" style="display: none;">
+                🛑 Stop
+            </button>
+        </div>
+
+        <div id="display-container">
+            <div id="live-indicator" style="display: none;"><span class="live-badge">🔴 LIVE</span></div>
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <img id="image-preview" src="#" alt="Preview" />
+        </div>
+
+        <div id="result-bar">
+            <span id="animal">...</span>
+            <span id="percent">0%</span>
+        </div>
+    </div>
+
+    <script>
+        const imagePreview = document.getElementById("image-preview");
+        const video = document.getElementById("webcam");
+        const canvas = document.getElementById("canvas");
+        
+        const btnCameraManual = document.getElementById("btn-camera-manual");
+        const btnCameraLive = document.getElementById("btn-camera-live");
+        const btnCapture = document.getElementById("btn-capture");
+        const btnStop = document.getElementById("btn-stop");
+        const liveIndicator = document.getElementById("live-indicator");
+
+        let videoInterval = null; 
+        let isProcessing = false; 
+
+        function triggerImageUpload() {
+            stopWebcam();
+            document.getElementById('file-input').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.style.display = "block";
+            sendToBackend(file);
+        }
+
+        async function openCameraStream() {
+            imagePreview.style.display = "none";
+            video.style.display = "block";
+            btnCameraManual.style.display = "none";
+            btnCameraLive.style.display = "none";
+            btnStop.style.display = "inline-block";
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            video.srcObject = stream;
+        }
+
+        async function startCameraManual() {
+            try {
+                await openCameraStream();
+                btnCapture.style.display = "inline-block";
+            } catch (err) {
+                alert("Kamera konnte nicht geöffnet werden: " + err);
+                stopWebcam();
+            }
+        }
+
+        async function startLiveVideo() {
+            try {
+                await openCameraStream();
+                liveIndicator.style.display = "block";
+                video.classList.add("active-mode");
+                
+                videoInterval = setInterval(() => {
+                    captureAndSendFrame();
+                }, 1000);
+            } catch (err) {
+                alert("Kamera konnte nicht geöffnet werden: " + err);
+                stopWebcam();
+            }
+        }
+
+        function takeSnapshot() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "manual_snapshot.jpg", { type: "image/jpeg" });
+                imagePreview.src = URL.createObjectURL(file);
+                imagePreview.style.display = "block";
+                
+                stopWebcam();
+                sendToBackend(file);
+            }, 'image/jpeg');
+        }
+
+        function captureAndSendFrame() {
+            if (isProcessing || !video.srcObject) return; 
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const file = new File([blob], "live_frame.jpg", { type: "image/jpeg" });
+                    sendToBackend(file, true); 
+                }
+            }, 'image/jpeg', 0.7); 
+        }
+
+        function stopWebcam() {
+            if (videoInterval) {
+                clearInterval(videoInterval);
+                videoInterval = null;
+            }
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            video.style.display = "none";
+            video.classList.remove("active-mode");
+            btnCapture.style.display = "none";
+            btnStop.style.display = "none";
+            liveIndicator.style.display = "none";
+            
+            btnCameraManual.style.display = "inline-block";
+            btnCameraLive.style.display = "inline-block";
+            isProcessing = false;
+        }
+
+        async function sendToBackend(file, isLive = false) {
+            if (!isLive) {
+                document.getElementById("animal").innerText = "Analyzing...";
+                document.getElementById("percent").innerText = "⏳";
+            }
+            
+            isProcessing = true;
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/api/predict", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+                
+                document.getElementById("animal").innerText = data.animal;
+                document.getElementById("percent").innerText = data.percent;
+            } catch (error) {
+                console.error("Error:", error);
+                if (!isLive) {
+                    document.getElementById("animal").innerText = "Error ❌";
+                    document.getElementById("percent").innerText = "0%";
+                }
+            } finally {
+                isProcessing = false; 
+            }
+        }
+    </script>
+</body>
+</html>

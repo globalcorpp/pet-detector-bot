@@ -1,0 +1,140 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: #F7F5F2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.btn, .btn-stop, .btn-capture {
+    width: 100%;
+    border: none;
+    padding: 14px 10px;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .3s;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+}
+
+.btn:hover, .btn-stop:hover, .btn-capture:hover {
+    transform: translateY(-2px);
+}
+
+.photo {
+    background: #4F8EF7;
+}
+
+.video {
+    background: #59B86C;
+}
+
+.live-btn {
+    background: #9b59b6;
+}
+
+.btn-stop {
+    background: #7f8c8d;
+}
+
+.btn-capture {
+    background: #e67e22;
+}
+
+#display-container {
+    width: 100%;
+    height: 350px;
+    margin: 0 0 20px 0;
+    overflow: hidden;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#webcam {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    border-radius: 18px;
+    display: none;
+}
+
+#image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    display: none;
+}
+
+.live-badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+    background-color: #e74c3c;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    animation: blinker 1.5s linear infinite;
+}
+
+@keyframes blinker {
+    50% { opacity: 0; }
+}
+
+.active-mode {
+    border: 4px solid #2ecc71;
+}
+
+#result-bar {
+    width: 100%;
+    background: linear-gradient(135deg, #5E9CFF, #D66BEA);
+    color: white;
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 26px;
+    font-weight: bold;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, .15);
+}

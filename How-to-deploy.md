@@ -17,3 +17,5 @@ source pet_env/bin/activate
 pip install "numpy<2"
 
 uvicorn bot-api:app --host 0.0.0.0 --port 8080 --reload
+
+python bot-plus.py

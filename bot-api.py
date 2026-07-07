@@ -8,6 +8,7 @@ import tflite_runtime.interpreter as tflite
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from contextlib import asynccontextmanager
+from fastapi.staticfiles import StaticFiles
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -118,6 +119,8 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI with Lifespan ONLY ONCE
 app = FastAPI(lifespan=lifespan)
 
+
+
 @app.get("/health")
 def health_check():
     return {"status": "alive"}
@@ -133,3 +136,6 @@ async def api_predict(file: UploadFile = File(...)):
         os.remove(temp_path)
     
     return {"animal": label, "percent": confidence}
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
