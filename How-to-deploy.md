@@ -13,3 +13,7 @@ I used render.com
 
 python3.11 -m venv pet_env
 source pet_env/bin/activate
+
+pip install "numpy<2"
+
+uvicorn bot-api:app --host 0.0.0.0 --port 8080 --reload
