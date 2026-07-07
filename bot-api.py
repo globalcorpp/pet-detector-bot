@@ -3,7 +3,6 @@ import asyncio
 import aiohttp
 import numpy as np
 from fastapi import FastAPI, File, UploadFile
-# from fastapi.responses import HTMLResponse
 from PIL import Image, ImageOps
 import tflite_runtime.interpreter as tflite
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
@@ -43,30 +42,20 @@ def predict_animal(image_path):
     prediction = interpreter.get_tensor(output_details[0]['index'])
     index = np.argmax(prediction)
     
-    # Process label to remove prefix numbers like "0 Dog" -> "Dog"
     full_class_name = class_names[index]
     cleaned_label = full_class_name.split(" ", 1)[-1] if " " in full_class_name else full_class_name
+
+    translation_map = {
+        "cats": "Katze",
+        "dogs": "Hund",
+        "cat": "Katze",
+        "dog": "Hund"
+    }
+    
+    german_label = translation_map.get(cleaned_label.lower(), cleaned_label)
     
     confidence_score = prediction[0][index]
-    return cleaned_label, f"{float(confidence_score) * 100:.1f}%"
-
-app = FastAPI()
-
-@app.post("/api/predict")
-async def api_predict(file: UploadFile = File(...)):
-    temp_path = f"temp_web_{file.filename}"
-    with open(temp_path, "wb") as buffer:
-        buffer.write(await file.read())
-    
-    label, confidence = predict_animal(temp_path)
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
-    
-    return {"animal": label, "percent": confidence}
-
-@app.get("/health")
-def health_check():
-    return {"status": "alive"}
+    return german_label, f"{float(confidence_score) * 100:.1f}%"
 
 # Telegram Bot Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -79,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_bot_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo = update.message.photo[-1]
-    await update.message.reply_text("Ihr Bild wird verarbeitet ... ⏳")
+    await update.message.reply_text("Ihr Bild wird verarbeitet ...")
     
     temp_bot_path = f"temp_bot_{photo.file_id}.jpg"
     new_file = await context.bot.get_file(photo.file_id)
@@ -89,7 +78,7 @@ async def handle_bot_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if os.path.exists(temp_bot_path):
         os.remove(temp_bot_path)
     
-    await update.message.reply_text(f"Result: {label} ({confidence}) 🐶🐱")
+    await update.message.reply_text(f"Ergebnis: {label} {confidence} ")
 
 # Anti-Sleep Keep-Alive Loop
 async def keep_alive():
@@ -106,7 +95,7 @@ async def keep_alive():
                 print(f"Self-ping background task warning: {e}")
             await asyncio.sleep(600)
 
-# Modern Lifespan Manager (Replaces app.on_event)
+# Modern Lifespan Manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     bot_app = Application.builder().token(TOKEN).build()
@@ -126,5 +115,21 @@ async def lifespan(app: FastAPI):
     await bot_app.updater.stop()
     await bot_app.stop()
 
-# Pass the lifespan handler to FastAPI initialization
+# Initialize FastAPI with Lifespan ONLY ONCE
 app = FastAPI(lifespan=lifespan)
+
+@app.get("/health")
+def health_check():
+    return {"status": "alive"}
+
+@app.post("/api/predict")
+async def api_predict(file: UploadFile = File(...)):
+    temp_path = f"temp_web_{file.filename}"
+    with open(temp_path, "wb") as buffer:
+        buffer.write(await file.read())
+    
+    label, confidence = predict_animal(temp_path)
+    if os.path.exists(temp_path):
+        os.remove(temp_path)
+    
+    return {"animal": label, "percent": confidence}
