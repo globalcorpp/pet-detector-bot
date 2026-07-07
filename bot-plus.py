@@ -30,11 +30,13 @@ async def handle_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data
 
     if user_text == "Name":
+        print("Name def called")
         user_data['state'] = 'waiting_for_name'
         await update.message.reply_text("Wie heißen Sie? Bitte geben Sie Ihren Namen ein:")
         return
 
     if user_text == "Alter":
+        print("Alter def called")
         user_data['state'] = 'waiting_for_age'
         await update.message.reply_text("Wie alt sind Sie? Bitte geben Sie Ihr Alter ein:")
         return
