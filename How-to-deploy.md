@@ -6,4 +6,10 @@ pip install python-telegram-bot python-dotenv
 pip install aiohttp
 pip freeze > requirements.txt
 
+pip install -r requirements.txt
+
 I used render.com
+
+
+python3.11 -m venv pet_env
+source pet_env/bin/activate
