@@ -56,6 +56,8 @@ def predict_animal(image_path):
     german_label = translation_map.get(cleaned_label.lower(), cleaned_label)
     
     confidence_score = prediction[0][index]
+    if confidence_score < 0.75:
+        return "Unbekannt", f"{(1 - confidence_score) * 100:.1f}%" 
     return german_label, f"{float(confidence_score) * 100:.1f}%"
 
 # Telegram Bot Handlers
